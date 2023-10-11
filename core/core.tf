@@ -1,3 +1,20 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.18.0"
+    }
+  }
+
+  backend "s3" {
+    bucket         	   = "multi-ghw-bucket"
+    key              	   = "state/terraform.tfstate1"
+    region         	   = "us-east-1"
+    encrypt        	   = true
+    dynamodb_table = "multi-ghw-dynamodb"
+  }
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -106,7 +123,7 @@ resource "local_file" "core_kp" {
   filename = "core_kp"
 }
 
-# EC2 instance for core1234
+# EC2 instance for core-ec2
 resource "aws_instance" "core-ec2" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "t3.medium"
