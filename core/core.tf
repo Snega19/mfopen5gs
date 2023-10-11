@@ -7,11 +7,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         	   = "multi-ghw-bucket"
+    bucket         	   = "multi-ghw-bucket1"
     key              	   = "state/terraform.tfstate1"
     region         	   = "us-east-1"
     encrypt        	   = true
-    dynamodb_table = "multi-ghw-dynamodb"
+    dynamodb_table = "multi-ghw-dynamodb1"
   }
 }
 
@@ -153,6 +153,13 @@ resource "aws_instance" "core-ec2" {
   tags = {
     Name = "core-ec2"
   }
+}
+
+# Elastic ipf for core
+
+resource "aws_eip" "core-eip" {
+  instance = aws_instance.core-ec2.id
+  domain   = "vpc"
 }
 
 
