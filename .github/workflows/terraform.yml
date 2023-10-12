@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'core/**' # Adjust this path to match your directory structure
+      - 'ran/**'  # Adjust this path to match your directory structure
 
 jobs:
   terraform:
