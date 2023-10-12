@@ -1,3 +1,20 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.18.0"
+    }
+  }
+
+  backend "s3" {
+    bucket         	   = "monitoring-bucket"
+    key              	   = "state/terraform.tfstate1"
+    region         	   = "us-east-1"
+    encrypt        	   = true
+    dynamodb_table = "monitoring-dynamodb"
+  }
+}
+
 provider "aws" {
   region = "us-east-1"
 }
@@ -110,7 +127,7 @@ resource "local_file" "monitoring_kp" {
 }
 
 
-# EC2 instance for Monitoring12345678
+# EC2 instance for Monitoring
 resource "aws_instance" "monitoring" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "t2.medium"
@@ -140,6 +157,11 @@ resource "aws_instance" "monitoring" {
   tags = {
     Name = "monitoring"
   }
+}
+
+# Elastic IP for core
+resource "aws_eip" "core-eip" {
+  instance = aws_instance.monitoring.id
 }
 
 # Null resource for public EC23456789edited
