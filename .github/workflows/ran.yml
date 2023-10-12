@@ -48,7 +48,7 @@ jobs:
           export TF_LOG=DEBUG
           terraform apply -auto-approve tfplan
         continue-on-error: true
-        working-directory: src
+        working-directory: ran
 
       - name: Cleanup Terraform Files
         if: steps.apply.outcome == 'success'
