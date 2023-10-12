@@ -7,6 +7,7 @@ on:
 
 jobs:
   terraform_core:
+    if: "github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'core/')"
     runs-on: ubuntu-latest
 
     steps:
@@ -21,31 +22,32 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Initialize Terraform for 'core'
+      - name: Initialize Terraform
         run: terraform init
         working-directory: core
 
-      - name: Validate Terraform for 'core'
+      - name: Validate Terraform
         run: terraform validate -no-color
         working-directory: core
 
-      - name: Plan Terraform Changes for 'core'
-        run: terraform plan -out=core/tfplan -no-color
+      - name: Plan Terraform Changes
+        run: terraform plan -out=tfplan -no-color
         continue-on-error: true
         working-directory: core
 
-      - name: Apply Terraform Changes for 'core'
+      - name: Apply Terraform Changes
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve core/tfplan
+          terraform apply -auto-approve tfplan
         continue-on-error: true
         working-directory: core
 
-      - name: Cleanup Terraform Files for 'core'
-        if: steps.apply.outcome == 'success'
+      - name: Cleanup Terraform Files
+        if: success()
         run: rm -f core/tfplan
 
   terraform_ran:
+    if: "github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'ran/')"
     runs-on: ubuntu-latest
 
     steps:
@@ -55,31 +57,31 @@ jobs:
       - name: Set up AWS credentials
         run: aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Set up Terraform for 'ran'
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.5.7
 
-      - name: Initialize Terraform for 'ran'
+      - name: Initialize Terraform
         run: terraform init
         working-directory: ran
 
-      - name: Validate Terraform for 'ran'
+      - name: Validate Terraform
         run: terraform validate -no-color
         working-directory: ran
 
-      - name: Plan Terraform Changes for 'ran'
-        run: terraform plan -out=ran/tfplan -no-color
+      - name: Plan Terraform Changes
+        run: terraform plan -out=tfplan -no-color
         continue-on-error: true
         working-directory: ran
 
-      - name: Apply Terraform Changes for 'ran'
+      - name: Apply Terraform Changes
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve ran/tfplan
+          terraform apply -auto-approve tfplan
         continue-on-error: true
         working-directory: ran
 
-      - name: Cleanup Terraform Files for 'ran'
-        if: steps.apply.outcome == 'success'
+      - name: Cleanup Terraform Files
+        if: success()
         run: rm -f ran/tfplan
