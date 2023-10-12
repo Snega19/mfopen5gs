@@ -155,7 +155,7 @@ resource "aws_instance" "monitoring" {
   #     iops        = 100
   #   }
   tags = {
-    Name = "monitoring"
+    Name = "monitoring1"
   }
 }
 
