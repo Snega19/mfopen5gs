@@ -48,7 +48,7 @@ resource "aws_internet_gateway" "Core-igw" {
   vpc_id = aws_vpc.Core-vpc.id
 
   tags = {
-    Name = "Core-igw2"
+    Name = "Core-igw"
   }
 }
 
