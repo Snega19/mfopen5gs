@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        directory: [core]
+        directory: [core,ran]
 
     steps:
       - name: Checkout code
