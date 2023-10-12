@@ -7,11 +7,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         	   = "multi-ghw-bucket1"
+    bucket         	   = "multi-ghw-bucket"
     key              	   = "state/terraform.tfstate1"
     region         	   = "us-east-1"
     encrypt        	   = true
-    dynamodb_table = "multi-ghw-dynamodb1"
+    dynamodb_table = "multi-ghw-dynamodb"
   }
 }
 
@@ -155,6 +155,7 @@ resource "aws_instance" "core-ec2" {
 resource "aws_eip" "core-eip" {
   instance = aws_instance.core-ec2.id
   domain   = "vpc"
+  depends_on = [aws_instance.core-ec2]
 }
 
 # Null resource for public EC2
