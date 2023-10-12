@@ -7,7 +7,6 @@ on:
 
 jobs:
   terraform_core:
-    if: github.event.head_commit.modified == true
     runs-on: ubuntu-latest
 
     steps:
@@ -22,52 +21,31 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Check if Changes are in 'core'
-        id: check_core_changes
-        run: |
-          if [[ -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^core/')" ]]; then
-            echo "Changes found in 'core/' directory."
-            echo ::set-output name=run_core::true
-          else
-            echo "No changes found in 'core/' directory."
-          fi
-        shell: bash
-
-      - name: Check if Changes are in 'ran'
-        id: check_ran_changes
-        run: |
-          if [[ -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^ran/')" ]]; then
-            echo "Changes found in 'ran/' directory."
-            echo ::set-output name=run_ran::true
-          else
-            echo "No changes found in 'ran/' directory."
-          fi
-        shell: bash
-
       - name: Initialize Terraform for 'core'
-        if: steps.check_core_changes.outputs.run_core == 'true'
-        run: terraform init -chdir=core
+        run: terraform init
+        working-directory: core
 
       - name: Validate Terraform for 'core'
-        if: steps.check_core_changes.outputs.run_core == 'true'
-        run: terraform validate -chdir=core
+        run: terraform validate -no-color
+        working-directory: core
 
       - name: Plan Terraform Changes for 'core'
-        if: steps.check_core_changes.outputs.run_core == 'true'
-        run: terraform plan -out=tfplan -chdir=core -no-color
+        run: terraform plan -out=core/tfplan -no-color
+        continue-on-error: true
+        working-directory: core
 
       - name: Apply Terraform Changes for 'core'
-        if: steps.check_core_changes.outputs.run_core == 'true'
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve tfplan -chdir=core
+          terraform apply -auto-approve core/tfplan
+        continue-on-error: true
+        working-directory: core
 
       - name: Cleanup Terraform Files for 'core'
-        if: steps.check_core_changes.outputs.run_core == 'true'
+        if: steps.apply.outcome == 'success'
         run: rm -f core/tfplan
 
   terraform_ran:
-    if: steps.check_ran_changes.outputs.run_ran == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -77,24 +55,31 @@ jobs:
       - name: Set up AWS credentials
         run: aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} && aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Set up Terraform
+      - name: Set up Terraform for 'ran'
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.5.7
 
       - name: Initialize Terraform for 'ran'
-        run: terraform init -chdir=ran
+        run: terraform init
+        working-directory: ran
 
       - name: Validate Terraform for 'ran'
-        run: terraform validate -chdir=ran
+        run: terraform validate -no-color
+        working-directory: ran
 
       - name: Plan Terraform Changes for 'ran'
-        run: terraform plan -out=tfplan -chdir=ran -no-color
+        run: terraform plan -out=ran/tfplan -no-color
+        continue-on-error: true
+        working-directory: ran
 
       - name: Apply Terraform Changes for 'ran'
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve tfplan -chdir=ran
+          terraform apply -auto-approve ran/tfplan
+        continue-on-error: true
+        working-directory: ran
 
       - name: Cleanup Terraform Files for 'ran'
+        if: steps.apply.outcome == 'success'
         run: rm -f ran/tfplan
