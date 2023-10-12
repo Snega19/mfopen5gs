@@ -10,7 +10,8 @@ on:
 
 jobs:
   terraform_core:
-    if: github.event.head_commit.modified == true && contains(github.event.head_commit.added, 'core/')
+    if: github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'core/')
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -54,7 +55,8 @@ jobs:
         run: rm -f ${{ matrix.directory }}/tfplan
 
   terraform_ran:
-    if: github.event.head_commit.modified == true && contains(github.event.head_commit.added, 'ran/')
+    if: github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'ran/')
+
     runs-on: ubuntu-latest
 
     strategy:
