@@ -28,7 +28,7 @@ resource "aws_vpc" "RAN-vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "RANI-vpc"
+    Name = "RAN-vpc1"
   }
 }
 
@@ -39,7 +39,7 @@ resource "aws_subnet" "RAN-subnet" {
   map_public_ip_on_launch = true
   availability_zone       = "us-east-1b"
   tags = {
-    Name = "RANI-subnet"
+    Name = "RAN-subnet1"
   }
 }
 
