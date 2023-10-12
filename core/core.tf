@@ -18,6 +18,7 @@ terraform {
 provider "aws" {
   region = "us-east-1"
 }
+
 # VPC for Corenetwork
 resource "aws_vpc" "Core-vpc" {
   cidr_block           = "10.0.0.0/16"
@@ -30,20 +31,19 @@ resource "aws_vpc" "Core-vpc" {
   }
 }
 
-
-#Public subnet for core
+# Public subnet for core
 resource "aws_subnet" "core-subnet" {
   vpc_id                  = aws_vpc.Core-vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-east-1a"
+
   tags = {
-    Name = "core-subsub"
+    Name = "core-subnet"
   }
 }
 
-#Core Internet Gateway 
-
+# Core Internet Gateway
 resource "aws_internet_gateway" "Core-igw" {
   vpc_id = aws_vpc.Core-vpc.id
 
@@ -52,9 +52,7 @@ resource "aws_internet_gateway" "Core-igw" {
   }
 }
 
-
 # Route table for Core-igw
-
 resource "aws_route_table" "core_igw_rt" {
   vpc_id = aws_vpc.Core-vpc.id
 
@@ -68,7 +66,6 @@ resource "aws_route_table" "core_igw_rt" {
   }
 }
 
-
 # Subnet association for Core
 resource "aws_route_table_association" "Core-sa" {
   subnet_id      = aws_subnet.core-subnet.id
@@ -78,7 +75,7 @@ resource "aws_route_table_association" "Core-sa" {
 # Public security group
 resource "aws_security_group" "Core_sg" {
   name        = "public-sg"
-  description = "Allow ssh and all traffic"
+  description = "Allow SSH and all traffic"
   vpc_id      = aws_vpc.Core-vpc.id
 
   ingress {
@@ -88,14 +85,12 @@ resource "aws_security_group" "Core_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-
   ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
 
   egress {
     from_port   = 0
@@ -109,15 +104,16 @@ resource "aws_security_group" "Core_sg" {
   }
 }
 
-
 resource "aws_key_pair" "core_kp" {
   key_name   = "core_kp"
   public_key = tls_private_key.rsa.public_key_openssh
 }
+
 resource "tls_private_key" "rsa" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
+
 resource "local_file" "core_kp" {
   content  = tls_private_key.rsa.private_key_pem
   filename = "core_kp"
@@ -127,8 +123,7 @@ resource "local_file" "core_kp" {
 resource "aws_instance" "core-ec2" {
   ami           = "ami-053b0d53c279acc90"
   instance_type = "t3.medium"
-# vpc_id                      = aws_vpc.Core-vpc.id
-  key_name                    = "core_kp"
+  key_name      = "core_kp"
   vpc_security_group_ids      = [aws_security_group.Core_sg.id]
   subnet_id                   = aws_subnet.core-subnet.id
   associate_public_ip_address = true
@@ -145,41 +140,37 @@ resource "aws_instance" "core-ec2" {
     destination = "/home/ubuntu/core_kp"
   }
 
-    root_block_device {
-      volume_size = 25
-      volume_type = "io1"
-      iops        = 100
-    }
+  root_block_device {
+    volume_size = 25
+    volume_type = "io1"
+    iops        = 100
+  }
+
   tags = {
     Name = "core-ec2"
   }
 }
 
-# Elastic ipf for core
-
+# Elastic IP for core
 resource "aws_eip" "core-eip" {
   instance = aws_instance.core-ec2.id
   domain   = "vpc"
 }
 
-
 # Null resource for public EC2
 resource "null_resource" "Core-null-res" {
   connection {
-    type        = "ssh"
-    host        = aws_instance.core-ec2.public_ip
-    user        = "ubuntu"
-    private_key = tls_private_key.rsa.private_key_pem
+  type        = "ssh"
+  host        = aws_instance.core-ec2.public_ip
+  user        = "ubuntu"
+  private_key = tls_private_key.rsa.private_key_pem
   }
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait",
+    #   "cloud-init status --wait",
       file("${path.module}/microk8s.sh"),
-      "#!/bin/bash",
-    #   "kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.22/deploy/local-path-storage.yaml",
-    #   "kubectl patch storageclass local-path -p '{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}'",
       file("${path.module}/core.sh")
     ]
-  }
+    }
   depends_on = [aws_instance.core-ec2]
 }
