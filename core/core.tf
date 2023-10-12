@@ -154,7 +154,6 @@ resource "aws_instance" "core-ec2" {
 # Elastic IP for core
 resource "aws_eip" "core-eip" {
   instance = aws_instance.core-ec2.id
-  domain   = "vpc"
   depends_on = [aws_instance.core-ec2]
 }
 
