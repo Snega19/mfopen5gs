@@ -11,7 +11,7 @@ terraform {
     key              	   = "state/terraform.tfstate1"
     region         	   = "us-east-1"
     encrypt        	   = true
-    dynamodb_table = "multi-ghw-dynamodb"1
+    dynamodb_table = "multi-ghw-dynamodb1"
   }
 }
 
