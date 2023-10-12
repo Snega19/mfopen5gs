@@ -9,6 +9,12 @@ on:
       - 'ran/**'
 
 jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Event Payload
+        run: echo "$GITHUB_EVENT_PATH"
+
   terraform_core:
     if: github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'core/')
 
