@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket         	   = "monitoring-bucket"
+    bucket         	   = "monitoring-bucket12"
     key              	   = "state/terraform.tfstate1"
     region         	   = "us-east-1"
     encrypt        	   = true
