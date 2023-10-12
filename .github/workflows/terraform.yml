@@ -4,26 +4,12 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'core/**'
-      - 'ran/**'
 
 jobs:
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug Event Payload
-        run: echo "$GITHUB_EVENT_PATH"
-
   terraform_core:
-    if: github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'core/')
-
+    if: github.event.head_commit.modified == true
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        directory: [core]
-        
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -36,38 +22,53 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Initialize Terraform
-        run: terraform init
-        working-directory: ${{ matrix.directory }}
+      - name: Check if Changes are in 'core'
+        id: check_core_changes
+        run: |
+          if [[ -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^core/')" ]]; then
+            echo "Changes found in 'core/' directory."
+            echo ::set-output name=run_core::true
+          else
+            echo "No changes found in 'core/' directory."
+          fi
+        shell: bash
 
-      - name: Validate Terraform
-        run: terraform validate -no-color
-        working-directory: ${{ matrix.directory }}
+      - name: Check if Changes are in 'ran'
+        id: check_ran_changes
+        run: |
+          if [[ -n "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^ran/')" ]]; then
+            echo "Changes found in 'ran/' directory."
+            echo ::set-output name=run_ran::true
+          else
+            echo "No changes found in 'ran/' directory."
+          fi
+        shell: bash
 
-      - name: Plan Terraform Changes
-        run: terraform plan -out=tfplan -no-color
-        continue-on-error: true
-        working-directory: ${{ matrix.directory }}
+      - name: Initialize Terraform for 'core'
+        if: steps.check_core_changes.outputs.run_core == 'true'
+        run: terraform init -chdir=core
 
-      - name: Apply Terraform Changes
+      - name: Validate Terraform for 'core'
+        if: steps.check_core_changes.outputs.run_core == 'true'
+        run: terraform validate -chdir=core
+
+      - name: Plan Terraform Changes for 'core'
+        if: steps.check_core_changes.outputs.run_core == 'true'
+        run: terraform plan -out=tfplan -chdir=core -no-color
+
+      - name: Apply Terraform Changes for 'core'
+        if: steps.check_core_changes.outputs.run_core == 'true'
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve tfplan
-        continue-on-error: true
-        working-directory: ${{ matrix.directory }}
+          terraform apply -auto-approve tfplan -chdir=core
 
-      - name: Cleanup Terraform Files
-        if: success()
-        run: rm -f ${{ matrix.directory }}/tfplan
+      - name: Cleanup Terraform Files for 'core'
+        if: steps.check_core_changes.outputs.run_core == 'true'
+        run: rm -f core/tfplan
 
   terraform_ran:
-    if: github.event.head_commit.modified == true && contains(github.event.head_commit.modified, 'ran/')
-
+    if: steps.check_ran_changes.outputs.run_ran == 'true'
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        directory: [ran]
 
     steps:
       - name: Checkout code
@@ -81,26 +82,19 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Initialize Terraform
-        run: terraform init
-        working-directory: ${{ matrix.directory }}
+      - name: Initialize Terraform for 'ran'
+        run: terraform init -chdir=ran
 
-      - name: Validate Terraform
-        run: terraform validate -no-color
-        working-directory: ${{ matrix.directory }}
+      - name: Validate Terraform for 'ran'
+        run: terraform validate -chdir=ran
 
-      - name: Plan Terraform Changes
-        run: terraform plan -out=tfplan -no-color
-        continue-on-error: true
-        working-directory: ${{ matrix.directory }}
+      - name: Plan Terraform Changes for 'ran'
+        run: terraform plan -out=tfplan -chdir=ran -no-color
 
-      - name: Apply Terraform Changes
+      - name: Apply Terraform Changes for 'ran'
         run: |
           export TF_LOG=DEBUG
-          terraform apply -auto-approve tfplan
-        continue-on-error: true
-        working-directory: ${{ matrix.directory }}
+          terraform apply -auto-approve tfplan -chdir=ran
 
-      - name: Cleanup Terraform Files
-        if: success()
-        run: rm -f ${{ matrix.directory }}/tfplan
+      - name: Cleanup Terraform Files for 'ran'
+        run: rm -f ran/tfplan
