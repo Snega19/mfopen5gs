@@ -147,7 +147,7 @@ resource "aws_instance" "core-ec2" {
   }
 
   tags = {
-    Name = "core"
+    Name = "core-server"
   }
 }
 
