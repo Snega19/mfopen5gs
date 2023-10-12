@@ -139,6 +139,10 @@ resource "aws_instance" "RAN-ec2" {
   }
 }
 
+# Elastic IP for core
+resource "aws_eip" "core-eip" {
+  instance = aws_instance.RAN-ec2.id
+}
 # Null resource for public EC2
 resource "null_resource" "RAN-null-res" {
   connection {
@@ -149,7 +153,6 @@ resource "null_resource" "RAN-null-res" {
   }
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait",
       file("${path.module}/microk8s.sh"),
       file("${path.module}/ran.sh")
     ]
