@@ -27,7 +27,7 @@ resource "aws_vpc" "Core-vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "Core-vpc12"
+    Name = "Core-vpc123"
   }
 }
 
