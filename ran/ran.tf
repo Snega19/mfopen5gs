@@ -7,11 +7,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         	   = "multi-ghw-bucket223"
+    bucket         	   = "ran-bucket"
     key              	   = "state/terraform.tfstate1"
     region         	   = "us-east-1"
     encrypt        	   = true
-    dynamodb_table = "multi-ghw-dynamodb2"
+    dynamodb_table = "ran-dynamodb"
   }
 }
 
